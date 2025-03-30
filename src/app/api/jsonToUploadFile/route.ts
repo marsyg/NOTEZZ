@@ -1,64 +1,41 @@
-import { callNebius } from "@/lib/nebiusLLModel";
+import { callNebius } from "@/lib/callNebius";
+import { uploadCloudinary } from "@/lib/uploadToCloudinary";
 import fs from "fs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-	// const formData = await req.formData();
-	// const doc = formData.get("doc");
-	// const inputText = formData.get("inputText");
+  try {
+    const { docBase64, filename } = await req.json();
+	console.log("docbase:", docBase64);
 
-	// if (!doc || !(doc instanceof File) || typeof inputText !== "string") {
-	// 	return NextResponse.json({ error: "No files received." }, { status: 400 });
-	// }
 
-	// const buffer = Buffer.from(await doc.arrayBuffer());
+    const { text } = await callNebius(docBase64);
+	console.log("Text : ",text);
 
-	// fs.writeFileSync("public/input.pdf", buffer);
+    if (!text) {
+      throw new Error("model call failed...");
+    }
+    // write json text to a temporary file
+    const filePath = `public/${filename}`;
+    fs.writeFileSync(filePath, text!);
 
-	const { docBase64, inputText } = await req.json();
+    const uploadResult = await uploadCloudinary(filePath, filename);
 
-	const { text } = await callNebius(docBase64, inputText);
+    if (!uploadResult) {
+      throw new Error("File upload failed...");
+    }
 
-	if (!text) {
-		return NextResponse.json(
-			{ success: false, message: "model call failed" },
-			{ status: 500 }
-		);
-	}
+    fs.unlinkSync(filePath);
 
-	// const json = JSON.stringify(text);
-
-	try {
-		// write json text to a temporary file
-		fs.writeFileSync("public/output.pdf", text!);
-
-		//json.pdf file upload code here
-		const upload = true;
-		(() => {
-			setTimeout(() => {
-				console.log("File uploaded successfully");
-			}, 5000);
-		})();
-
-		if (!upload) {
-			return NextResponse.json(
-				{ success: false, message: "File upload failed" },
-				{ status: 500 }
-			);
-		}
-
-		// after upload delete the file
-		// fs.unlinkSync("public/output.pdf");
-
-		return NextResponse.json(
-			{ success: true, message: "File uploaded successfully" },
-			{ status: 200 }
-		);
-	} catch (error : any) {
-		console.error(error);
-		return NextResponse.json(
-			{ success: false, error: error.message },
-			{ status: 500 }
-		);
-	}
+    return NextResponse.json(
+      { success: true, message: "File uploaded successfully", uploadResult},
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error(error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
 }
