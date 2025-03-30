@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createOutputPdf } from '@/lib/createpdffromJSON';
+import { createOutputPdf } from '@/lib/createPDF';
 import fs from 'fs';
 
 const handler = async (req: Request) => {
