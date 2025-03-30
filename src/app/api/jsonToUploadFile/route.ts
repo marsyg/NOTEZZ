@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
 
     const { text } = await callNebius(docBase64);
-	console.log("Text : ",text);
+	console.log("text : ",text);
 
     if (!text) {
       throw new Error("model call failed...");
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const filePath = `public/${filename}`;
     fs.writeFileSync(filePath, text!);
 
-    const uploadResult = await uploadCloudinary(filePath, filename);
+    const uploadResult = await uploadCloudinary(filename, filePath);
 
     if (!uploadResult) {
       throw new Error("File upload failed...");
