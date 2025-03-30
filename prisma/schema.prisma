@@ -18,7 +18,6 @@ model User {
   folders     Folder[]
   files       File[]
   sharedItems SharedItem[]
-  trashItems  Trash[]
 }
 
 model RootFolder {
@@ -73,14 +72,4 @@ model SharedItem {
   sharedAt    DateTime @default(now())
 
   user User @relation(fields: [sharedWith], references: [id], onDelete: Cascade)
-}
-
-model Trash {
-  id        String   @id @default(uuid())
-  itemId    String
-  itemType  String   @default("file") // "file" or "folder"
-  userId    String
-  deletedAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
